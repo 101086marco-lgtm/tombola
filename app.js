@@ -1,19 +1,37 @@
+// 🔥 FIREBASE
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getDatabase, ref, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "LA_TUA_API_KEY",
+  authDomain: "TUO_PROGETTO.firebaseapp.com",
+  databaseURL: "https://TUO_PROGETTO-default-rtdb.firebaseio.com",
+  projectId: "TUO_PROGETTO",
+  storageBucket: "TUO_PROGETTO.appspot.com",
+  messagingSenderId: "XXXX",
+  appId: "XXXX"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+// --------------------
+
 let role = null;
 let selectedPrize = null;
 
 const prizeOrder = ["ambo", "terno", "quaterna", "cinquina", "tombola"];
 
-function setRole(r) {
+window.setRole = (r) => {
   role = r;
   document.getElementById("roleSelect").classList.add("hidden");
   document.getElementById(r).classList.remove("hidden");
-}
+};
 
-/* ------------------ GAME CONTROL ------------------ */
+// ---------------- GAME ----------------
 
-function startGame() {
+window.startGame = () => {
   set(ref(db, "game"), {
-    started: true,
     prizes: {
       ambo: { won: false },
       terno: { won: false },
@@ -22,18 +40,18 @@ function startGame() {
       tombola: { won: false }
     },
     players: {
-      1: { name: "Giocatore 1", wins: [] },
-      2: { name: "Giocatore 2", wins: [] },
-      3: { name: "Giocatore 3", wins: [] }
+      1: { name: "Giocatore 1", wins: {} },
+      2: { name: "Giocatore 2", wins: {} },
+      3: { name: "Giocatore 3", wins: {} }
     }
   });
-}
+};
 
-function resetGame() {
+window.resetGame = () => {
   set(ref(db, "game"), null);
-}
+};
 
-/* ------------------ ASSIGN PRIZE ------------------ */
+// ---------------- PREMI ----------------
 
 function selectPrize(prize) {
   selectedPrize = prize;
@@ -48,13 +66,13 @@ function assignPrize(playerId) {
   });
 
   update(ref(db, `game/players/${playerId}/wins`), {
-    [Date.now()]: selectedPrize
+    [selectedPrize]: true
   });
 
   selectedPrize = null;
 }
 
-/* ------------------ UI RENDER ------------------ */
+// ---------------- RENDER ----------------
 
 onValue(ref(db, "game"), (snap) => {
   const game = snap.val();
@@ -75,7 +93,7 @@ function renderCaller(game) {
   prizeOrder.forEach(p => {
     const btn = document.createElement("button");
     btn.textContent = p.toUpperCase();
-    if (game.prizes[p].won) btn.disabled = true;
+    if (game.prizes[p].won) btn.classList.add("won");
     btn.onclick = () => selectPrize(p);
     prizeDiv.appendChild(btn);
   });
@@ -102,16 +120,17 @@ function renderTV(game) {
   }
 
   Object.values(game.players).forEach(p => {
+    const wins = Object.keys(p.wins || {}).join(", ");
     const d = document.createElement("div");
-    d.textContent = `${p.name} → ${Object.values(p.wins || {}).join(", ")}`;
+    d.textContent = `${p.name} → ${wins}`;
     tvPlayers.appendChild(d);
   });
 
   prizeOrder.forEach(p => {
     const d = document.createElement("div");
     d.textContent = game.prizes[p].won
-      ? `${p.toUpperCase()} vinta`
-      : `${p.toUpperCase()} disponibile`;
+      ? `🏆 ${p.toUpperCase()}`
+      : p.toUpperCase();
     tvPrizes.appendChild(d);
   });
 }
