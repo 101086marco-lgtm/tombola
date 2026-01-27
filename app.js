@@ -1,37 +1,51 @@
-// 🔥 FIREBASE
+/* =====================================================
+   🔥 FIREBASE INIT (OBBLIGATORIO IN CIMA)
+===================================================== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import {
+  getDatabase,
+  ref,
+  set,
+  update,
+  onValue
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "LA_TUA_API_KEY",
-  authDomain: "TUO_PROGETTO.firebaseapp.com",
-  databaseURL: "https://TUO_PROGETTO-default-rtdb.firebaseio.com",
-  projectId: "TUO_PROGETTO",
-  storageBucket: "TUO_PROGETTO.appspot.com",
-  messagingSenderId: "XXXX",
-  appId: "XXXX"
+  apiKey: "AIzaSyCtuepB5Zrdg01fN37P9AivwwQCqc5950M",
+  authDomain: "super-tombola.firebaseapp.com",
+  databaseURL: "https://super-tombola-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "super-tombola",
+  storageBucket: "super-tombola.appspot.com",
+  messagingSenderId: "435954736235",
+  appId: "1:435954736235:web:888090e32d4a663ae9e52e"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// --------------------
-
+/* =====================================================
+   🎮 STATO LOCALE
+===================================================== */
 let role = null;
 let selectedPrize = null;
 
 const prizeOrder = ["ambo", "terno", "quaterna", "cinquina", "tombola"];
 
-window.setRole = (r) => {
+/* =====================================================
+   👤 RUOLI
+===================================================== */
+window.setRole = function (r) {
   role = r;
   document.getElementById("roleSelect").classList.add("hidden");
   document.getElementById(r).classList.remove("hidden");
 };
 
-// ---------------- GAME ----------------
-
-window.startGame = () => {
+/* =====================================================
+   ▶️ AVVIO / RESET PARTITA
+===================================================== */
+window.startGame = function () {
   set(ref(db, "game"), {
+    started: true,
     prizes: {
       ambo: { won: false },
       terno: { won: false },
@@ -47,12 +61,13 @@ window.startGame = () => {
   });
 };
 
-window.resetGame = () => {
+window.resetGame = function () {
   set(ref(db, "game"), null);
 };
 
-// ---------------- PREMI ----------------
-
+/* =====================================================
+   🏆 PREMI
+===================================================== */
 function selectPrize(prize) {
   selectedPrize = prize;
 }
@@ -60,7 +75,9 @@ function selectPrize(prize) {
 function assignPrize(playerId) {
   if (!selectedPrize) return;
 
-  update(ref(db, `game/prizes/${selectedPrize}`), {
+  const prizeRef = ref(db, `game/prizes/${selectedPrize}`);
+
+  update(prizeRef, {
     won: true,
     player: playerId
   });
@@ -72,19 +89,24 @@ function assignPrize(playerId) {
   selectedPrize = null;
 }
 
-// ---------------- RENDER ----------------
-
+/* =====================================================
+   🔄 SYNC REALTIME
+===================================================== */
 onValue(ref(db, "game"), (snap) => {
   const game = snap.val();
   renderCaller(game);
   renderTV(game);
 });
 
+/* =====================================================
+   📣 CHIAMANTE
+===================================================== */
 function renderCaller(game) {
   if (role !== "caller") return;
 
   const prizeDiv = document.getElementById("prizes");
   const playersDiv = document.getElementById("players");
+
   prizeDiv.innerHTML = "";
   playersDiv.innerHTML = "";
 
@@ -93,7 +115,12 @@ function renderCaller(game) {
   prizeOrder.forEach(p => {
     const btn = document.createElement("button");
     btn.textContent = p.toUpperCase();
-    if (game.prizes[p].won) btn.classList.add("won");
+
+    if (game.prizes[p].won) {
+      btn.disabled = true;
+      btn.classList.add("disabled");
+    }
+
     btn.onclick = () => selectPrize(p);
     prizeDiv.appendChild(btn);
   });
@@ -106,11 +133,15 @@ function renderCaller(game) {
   });
 }
 
+/* =====================================================
+   📺 TV
+===================================================== */
 function renderTV(game) {
   if (role !== "tv") return;
 
   const tvPlayers = document.getElementById("tvPlayers");
   const tvPrizes = document.getElementById("tvPrizes");
+
   tvPlayers.innerHTML = "";
   tvPrizes.innerHTML = "";
 
@@ -120,17 +151,17 @@ function renderTV(game) {
   }
 
   Object.values(game.players).forEach(p => {
-    const wins = Object.keys(p.wins || {}).join(", ");
     const d = document.createElement("div");
-    d.textContent = `${p.name} → ${wins}`;
+    const wins = Object.keys(p.wins || {}).join(", ");
+    d.textContent = `${p.name} → ${wins || "nessun premio"}`;
     tvPlayers.appendChild(d);
   });
 
   prizeOrder.forEach(p => {
     const d = document.createElement("div");
     d.textContent = game.prizes[p].won
-      ? `🏆 ${p.toUpperCase()}`
-      : p.toUpperCase();
+      ? `${p.toUpperCase()} VINTA`
+      : `${p.toUpperCase()} disponibile`;
     tvPrizes.appendChild(d);
   });
 }
