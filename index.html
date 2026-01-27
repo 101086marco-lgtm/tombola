@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Super Tombola</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { margin:0; font-family: Arial, sans-serif; background:#000; color:#fff }
+    .hidden { display:none }
+    button { padding:10px 20px; font-size:18px; margin:5px; cursor:pointer }
+    .premio-attivo { font-size:60px; color:gold; animation:pulse 1.5s infinite }
+    .premio-vinto { font-size:70px; color:#00ff99; animation:zoom 1s }
+    @keyframes pulse { 0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)} }
+    @keyframes zoom { from{transform:scale(0)}to{transform:scale(1)} }
+    .sbarrato { text-decoration: line-through; opacity:0.4; pointer-events:none }
+    .cartella { display:grid; grid-template-columns:repeat(9,1fr); gap:5px; margin:20px 0 }
+    .cella { border:1px solid #fff; height:40px; display:flex; align-items:center; justify-content:center }
+    .estratto { background:gold; color:#000 }
+  </style>
+</head>
+
+<body>
+
+<!-- SELEZIONE RUOLO -->
+<div id="roleSelect">
+  <h1>Seleziona ruolo</h1>
+  <button onclick="setRole('chiamante')">Chiamante</button>
+  <button onclick="setRole('tv')">TV</button>
+</div>
+
+<!-- CHIAMANTE -->
+<div id="chiamante" class="hidden">
+  <h1>CHIAMANTE</h1>
+  <button onclick="startGame()">Avvia partita</button>
+  <button onclick="extractNumber()">Estrai numero</button>
+  <button onclick="resetGame()">RESET</button>
+
+  <h2>Premi</h2>
+  <div id="premi"></div>
+
+  <h2>Giocatori</h2>
+  <div id="giocatori"></div>
+</div>
+
+<!-- TV -->
+<div id="tv" class="hidden">
+  <div id="tvPremio" class="premio-attivo">IN ATTESA</div>
+  <div id="tvVincita"></div>
+  <div id="tvGiocatori"></div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
