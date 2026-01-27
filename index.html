@@ -1,52 +1,91 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Super Tombola</title>
-  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <style>
-    body { margin:0; font-family: Arial, sans-serif; background:#000; color:#fff }
-    .hidden { display:none }
-    button { padding:10px 20px; font-size:18px; margin:5px; cursor:pointer }
-    .premio-attivo { font-size:60px; color:gold; animation:pulse 1.5s infinite }
-    .premio-vinto { font-size:70px; color:#00ff99; animation:zoom 1s }
-    @keyframes pulse { 0%{transform:scale(1)}50%{transform:scale(1.1)}100%{transform:scale(1)} }
-    @keyframes zoom { from{transform:scale(0)}to{transform:scale(1)} }
-    .sbarrato { text-decoration: line-through; opacity:0.4; pointer-events:none }
-    .cartella { display:grid; grid-template-columns:repeat(9,1fr); gap:5px; margin:20px 0 }
-    .cella { border:1px solid #fff; height:40px; display:flex; align-items:center; justify-content:center }
-    .estratto { background:gold; color:#000 }
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #111;
+      color: #fff;
+    }
+
+    .hidden { display: none; }
+
+    button {
+      padding: 10px 16px;
+      font-size: 16px;
+      margin: 5px;
+      cursor: pointer;
+    }
+
+    .premio {
+      padding: 10px;
+      border: 1px solid #555;
+      margin: 5px;
+      cursor: pointer;
+    }
+
+    .premio.vinto {
+      background: #444;
+      text-decoration: line-through;
+      color: #999;
+      cursor: not-allowed;
+    }
+
+    .giocatore {
+      border: 1px solid #555;
+      padding: 10px;
+      margin: 5px;
+    }
+
+    .tv {
+      text-align: center;
+      padding: 40px;
+    }
+
+    .tv h1 {
+      font-size: 60px;
+      margin-bottom: 20px;
+    }
+
+    .tv h2 {
+      font-size: 40px;
+      color: gold;
+    }
   </style>
 </head>
 
 <body>
 
-<!-- SELEZIONE RUOLO -->
-<div id="roleSelect">
-  <h1>Seleziona ruolo</h1>
-  <button onclick="setRole('chiamante')">Chiamante</button>
-  <button onclick="setRole('tv')">TV</button>
+<!-- SCELTA RUOLO -->
+<div id="schermata-ruolo">
+  <h1>Super Tombola</h1>
+  <button onclick="setRuolo('chiamante')">Chiamante</button>
+  <button onclick="setRuolo('tv')">TV</button>
 </div>
 
 <!-- CHIAMANTE -->
-<div id="chiamante" class="hidden">
-  <h1>CHIAMANTE</h1>
-  <button onclick="startGame()">Avvia partita</button>
-  <button onclick="extractNumber()">Estrai numero</button>
-  <button onclick="resetGame()">RESET</button>
+<div id="schermata-chiamante" class="hidden">
+  <h2>Chiamante</h2>
 
-  <h2>Premi</h2>
-  <div id="premi"></div>
+  <button onclick="avviaPartita()">Avvia partita</button>
+  <button onclick="resetPartita()">Reset</button>
 
-  <h2>Giocatori</h2>
-  <div id="giocatori"></div>
+  <h3>Premi</h3>
+  <div id="lista-premi"></div>
+
+  <h3>Giocatori</h3>
+  <div id="lista-giocatori"></div>
 </div>
 
 <!-- TV -->
-<div id="tv" class="hidden">
-  <div id="tvPremio" class="premio-attivo">IN ATTESA</div>
-  <div id="tvVincita"></div>
-  <div id="tvGiocatori"></div>
+<div id="schermata-tv" class="hidden tv">
+  <h1 id="tv-premio">IN ATTESA</h1>
+  <h2 id="tv-vincitore"></h2>
+  <div id="tv-giocatori"></div>
 </div>
 
 <script src="app.js"></script>

@@ -1,118 +1,136 @@
 console.log("APP.JS CARICATO OK");
 
-let role = null;
-let partitaAvviata = false;
-let numeriEstratti = [];
-let premioCorrente = "AMBO";
+let ruolo = null;
+let partitaAttiva = false;
 
-const premi = ["AMBO","TERNO","QUATERNA","CINQUINA","TOMBOLA"];
 const giocatori = [
-  { nome:"Mario", premi:[], cartelle:2 },
-  { nome:"Luigi", premi:[], cartelle:1 },
-  { nome:"Anna", premi:[], cartelle:3 }
+  { nome: "Mario", premi: [] },
+  { nome: "Luigi", premi: [] },
+  { nome: "Anna", premi: [] }
 ];
 
-function setRole(r){
-  role = r;
-  document.getElementById("roleSelect").classList.add("hidden");
-  document.getElementById(r).classList.remove("hidden");
-  console.log("Ruolo selezionato:", r);
+const premi = {
+  ambo:     { vinto: false, vincitore: null },
+  terno:    { vinto: false, vincitore: null },
+  quaterna: { vinto: false, vincitore: null },
+  cinquina: { vinto: false, vincitore: null },
+  tombola:  { vinto: false, vincitore: null }
+};
 
-  if(r==="tv"){
-    document.documentElement.requestFullscreen().catch(()=>{});
-    renderTV();
-  }
-  if(r==="chiamante"){
-    renderPremi();
-    renderGiocatori();
-  }
-}
+let premioCorrente = "ambo";
 
-function startGame(){
-  partitaAvviata = true;
-  premioCorrente = premi[0];
-  updateTVPremio();
-}
+/* ---------------- RUOLO ---------------- */
 
-function extractNumber(){
-  if(!partitaAvviata) return;
-  let n;
-  do { n = Math.floor(Math.random()*90)+1 } while(numeriEstratti.includes(n));
-  numeriEstratti.push(n);
-}
+function setRuolo(r) {
+  ruolo = r;
+  document.getElementById("schermata-ruolo").classList.add("hidden");
 
-function assegnaPremio(nome){
-  const g = giocatori.find(x=>x.nome===nome);
-  g.premi.push(premioCorrente);
-
-  mostraVincitaTV(nome);
-
-  const idx = premi.indexOf(premioCorrente);
-  if(idx < premi.length-1){
-    premioCorrente = premi[idx+1];
-    setTimeout(updateTVPremio, 4000);
+  if (r === "chiamante") {
+    document.getElementById("schermata-chiamante").classList.remove("hidden");
+    renderChiamante();
   } else {
-    setTimeout(()=> {
-      document.getElementById("tvPremio").innerText="FINE PARTITA";
-    },4000);
+    document.getElementById("schermata-tv").classList.remove("hidden");
+    aggiornaTV();
+    document.documentElement.requestFullscreen?.();
+  }
+}
+
+/* ---------------- PARTITA ---------------- */
+
+function avviaPartita() {
+  partitaAttiva = true;
+  premioCorrente = "ambo";
+  aggiornaTV();
+}
+
+function resetPartita() {
+  partitaAttiva = false;
+  premioCorrente = "ambo";
+
+  for (let p in premi) {
+    premi[p].vinto = false;
+    premi[p].vincitore = null;
   }
 
-  document.getElementById(premioCorrente)?.classList.add("sbarrato");
-  renderGiocatori();
-  renderTV();
+  giocatori.forEach(g => g.premi = []);
+
+  renderChiamante();
+  aggiornaTV();
 }
 
-function renderPremi(){
-  const div = document.getElementById("premi");
-  div.innerHTML="";
-  premi.forEach(p=>{
-    const b=document.createElement("button");
-    b.id=p;
-    b.innerText=p;
-    b.onclick=()=>premioCorrente=p;
-    div.appendChild(b);
+/* ---------------- PREMI ---------------- */
+
+function assegnaPremio(premio, nomeGiocatore) {
+  if (premi[premio].vinto) return;
+
+  premi[premio].vinto = true;
+  premi[premio].vincitore = nomeGiocatore;
+
+  const g = giocatori.find(g => g.nome === nomeGiocatore);
+  g.premi.push(premio);
+
+  premioCorrente = prossimoPremio();
+  renderChiamante();
+  aggiornaTV();
+}
+
+function prossimoPremio() {
+  for (let p in premi) {
+    if (!premi[p].vinto) return p;
+  }
+  return "FINE PARTITA";
+}
+
+/* ---------------- RENDER CHIAMANTE ---------------- */
+
+function renderChiamante() {
+  const premiDiv = document.getElementById("lista-premi");
+  premiDiv.innerHTML = "";
+
+  for (let p in premi) {
+    const div = document.createElement("div");
+    div.className = "premio" + (premi[p].vinto ? " vinto" : "");
+    div.textContent = p.toUpperCase();
+
+    if (!premi[p].vinto) {
+      div.onclick = () => {
+        const nome = prompt("Assegna a chi?");
+        if (nome) assegnaPremio(p, nome);
+      };
+    }
+
+    premiDiv.appendChild(div);
+  }
+
+  const gDiv = document.getElementById("lista-giocatori");
+  gDiv.innerHTML = "";
+
+  giocatori.forEach(g => {
+    const d = document.createElement("div");
+    d.className = "giocatore";
+    d.innerHTML = `<strong>${g.nome}</strong><br>Premi: ${g.premi.join(", ") || "-"}`;
+    gDiv.appendChild(d);
   });
 }
 
-function renderGiocatori(){
-  const div=document.getElementById("giocatori");
-  div.innerHTML="";
-  giocatori.forEach(g=>{
-    const b=document.createElement("button");
-    b.innerText=g.nome+" ("+g.premi.join(", ")+")";
-    b.onclick=()=>assegnaPremio(g.nome);
-    div.appendChild(b);
+/* ---------------- TV ---------------- */
+
+function aggiornaTV() {
+  document.getElementById("tv-premio").textContent =
+    partitaAttiva ? premioCorrente.toUpperCase() : "IN ATTESA";
+
+  let testo = "";
+  for (let p in premi) {
+    if (premi[p].vinto) {
+      testo += `<div>${p.toUpperCase()} → ${premi[p].vincitore}</div>`;
+    }
+  }
+
+  document.getElementById("tv-vincitore").innerHTML = testo;
+
+  const tg = document.getElementById("tv-giocatori");
+  tg.innerHTML = "";
+  giocatori.forEach(g => {
+    tg.innerHTML += `<div>${g.nome}: ${g.premi.join(", ") || "-"}</div>`;
   });
-}
-
-function renderTV(){
-  const div=document.getElementById("tvGiocatori");
-  div.innerHTML="";
-  giocatori.forEach(g=>{
-    const d=document.createElement("div");
-    d.innerText=g.nome+" → "+g.premi.join(", ");
-    div.appendChild(d);
-  });
-}
-
-function updateTVPremio(){
-  const el=document.getElementById("tvPremio");
-  el.className="premio-attivo";
-  el.innerText=premioCorrente;
-}
-
-function mostraVincitaTV(nome){
-  const el=document.getElementById("tvPremio");
-  el.className="premio-vinto";
-  el.innerText=`${premioCorrente} di ${nome}!`;
-}
-
-function resetGame(){
-  numeriEstratti=[];
-  premioCorrente="AMBO";
-  partitaAvviata=false;
-  giocatori.forEach(g=>g.premi=[]);
-  updateTVPremio();
-  renderGiocatori();
-  renderTV();
 }
