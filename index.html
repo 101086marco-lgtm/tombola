@@ -1,65 +1,80 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Super Tombola</title>
-  <script type="module" src="app.js"></script>
+  <meta charset="UTF-8">
+  <title>Tombola Online</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
   <style>
     body {
       margin: 0;
       font-family: Arial, sans-serif;
-      font-size: 3vw;
+      background: #111;
+      color: #fff;
       text-align: center;
-      background: #0b6623;
-      color: white;
-    }
-    button {
-      font-size: 3vw;
-      padding: 1em;
-      margin: 0.5em;
-      border-radius: 10px;
-      border: none;
     }
     .hidden { display: none; }
-    #caller, #tv {
-      padding: 2vh;
+
+    button {
+      font-size: 1.4em;
+      padding: 12px 20px;
+      margin: 8px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
     }
-    #players button {
-      display: block;
-      width: 90%;
-      margin: 0.5em auto;
+
+    .prize-won {
+      background: #555 !important;
+      text-decoration: line-through;
     }
-    @media (max-width: 768px) {
-      body { font-size: 5vw; }
-      button { font-size: 5vw; }
+
+    .big {
+      font-size: 3em;
+      margin: 20px 0;
     }
   </style>
 </head>
+
 <body>
 
-<div id="roleSelect">
-  <h1>🎱 Super Tombola</h1>
-  <button onclick="setRole('caller')">🎙️ Chiamante</button>
-  <button onclick="setRole('tv')">📺 TV</button>
+<!-- SCELTA SCHERMO -->
+<div id="screenSelect">
+  <h1>TOMBOLA</h1>
+  <button onclick="setScreen('caller')">CHIAMANTE</button>
+  <button onclick="setScreen('tv')">TV</button>
+  <button onclick="setScreen('player')">GIOCATORE</button>
 </div>
 
+<!-- CHIAMANTE -->
 <div id="caller" class="hidden">
   <h2>Chiamante</h2>
-  <button onclick="startGame()">▶️ Avvia partita</button>
-  <button onclick="resetGame()">🔄 Reset</button>
+  <button onclick="startGame()">Avvia Partita</button>
+  <button onclick="resetGame()">Reset</button>
 
   <h3>Premi</h3>
-  <div id="prizes"></div>
+  <div id="callerPrizes"></div>
 
   <h3>Giocatori</h3>
-  <div id="players"></div>
+  <div id="callerPlayers"></div>
 </div>
 
+<!-- TV -->
 <div id="tv" class="hidden">
-  <h1 id="tvPrize">In attesa di partita…</h1>
+  <div id="tvPrize" class="big"></div>
   <div id="tvPlayers"></div>
 </div>
 
+<!-- GIOCATORE -->
+<div id="player" class="hidden">
+  <h2>Giocatore</h2>
+  <p>Qui andranno le cartelle (step dopo)</p>
+</div>
+
+<script src="app.js"></script>
 </body>
 </html>
