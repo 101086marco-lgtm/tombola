@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Le mie cartelle</title>
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = { /* STESSA CONFIG */ };
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const playerId = new URLSearchParams(location.search).get("player");
+
+    onValue(ref(db, `game/players/${playerId}`), snap => {
+      const p = snap.val();
+      if (!p) return;
+
+      document.getElementById("name").textContent = p.name;
+      const c = document.getElementById("cards");
+      c.innerHTML = "";
+
+      Object.entries(p.cards || {}).forEach(([cid, card]) => {
+        const table = document.createElement("table");
+        table.style.margin = "2vh auto";
+        table.style.borderCollapse = "collapse";
+
+        card.rows.forEach(row => {
+          const tr = document.createElement("tr");
+          row.forEach(n => {
+            const td = document.createElement("td");
+            td.textContent = n || "";
+            td.style.border = "1px solid #000";
+            td.style.width = "8vw";
+            td.style.height = "8vw";
+            td.style.fontSize = "4vw";
+            td.style.background = card.marked?.[n] ? "#ff0" : "#fff";
+            td.onclick = () => {
+              const path = `game/players/${playerId}/cards/${cid}/marked/${n}`;
+              update(ref(db, path), card.marked?.[n] ? null : true);
+            };
+            tr.appendChild(td);
+          });
+          table.appendChild(tr);
+        });
+
+        c.appendChild(table);
+      });
+    });
+  </script>
+</head>
+<body style="text-align:center;font-family:Arial;">
+  <h1 id="name"></h1>
+  <div id="cards"></div>
+</body>
+</html>

@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Super Tombola</title>
+  <script type="module" src="app.js"></script>
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      font-size: 3vw;
+      text-align: center;
+      background: #0b6623;
+      color: white;
+    }
+    button {
+      font-size: 3vw;
+      padding: 1em;
+      margin: 0.5em;
+      border-radius: 10px;
+      border: none;
+    }
+    .hidden { display: none; }
+    #caller, #tv {
+      padding: 2vh;
+    }
+    #players button {
+      display: block;
+      width: 90%;
+      margin: 0.5em auto;
+    }
+    @media (max-width: 768px) {
+      body { font-size: 5vw; }
+      button { font-size: 5vw; }
+    }
+  </style>
+</head>
+<body>
+
+<div id="roleSelect">
+  <h1>🎱 Super Tombola</h1>
+  <button onclick="setRole('caller')">🎙️ Chiamante</button>
+  <button onclick="setRole('tv')">📺 TV</button>
+</div>
+
+<div id="caller" class="hidden">
+  <h2>Chiamante</h2>
+  <button onclick="startGame()">▶️ Avvia partita</button>
+  <button onclick="resetGame()">🔄 Reset</button>
+
+  <h3>Premi</h3>
+  <div id="prizes"></div>
+
+  <h3>Giocatori</h3>
+  <div id="players"></div>
+</div>
+
+<div id="tv" class="hidden">
+  <h1 id="tvPrize">In attesa di partita…</h1>
+  <div id="tvPlayers"></div>
+</div>
+
+</body>
+</html>
