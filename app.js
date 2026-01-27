@@ -1,136 +1,117 @@
-console.log("APP.JS CARICATO OK");
+let role = null;
+let selectedPrize = null;
 
-let ruolo = null;
-let partitaAttiva = false;
+const prizeOrder = ["ambo", "terno", "quaterna", "cinquina", "tombola"];
 
-const giocatori = [
-  { nome: "Mario", premi: [] },
-  { nome: "Luigi", premi: [] },
-  { nome: "Anna", premi: [] }
-];
-
-const premi = {
-  ambo:     { vinto: false, vincitore: null },
-  terno:    { vinto: false, vincitore: null },
-  quaterna: { vinto: false, vincitore: null },
-  cinquina: { vinto: false, vincitore: null },
-  tombola:  { vinto: false, vincitore: null }
-};
-
-let premioCorrente = "ambo";
-
-/* ---------------- RUOLO ---------------- */
-
-function setRuolo(r) {
-  ruolo = r;
-  document.getElementById("schermata-ruolo").classList.add("hidden");
-
-  if (r === "chiamante") {
-    document.getElementById("schermata-chiamante").classList.remove("hidden");
-    renderChiamante();
-  } else {
-    document.getElementById("schermata-tv").classList.remove("hidden");
-    aggiornaTV();
-    document.documentElement.requestFullscreen?.();
-  }
+function setRole(r) {
+  role = r;
+  document.getElementById("roleSelect").classList.add("hidden");
+  document.getElementById(r).classList.remove("hidden");
 }
 
-/* ---------------- PARTITA ---------------- */
+/* ------------------ GAME CONTROL ------------------ */
 
-function avviaPartita() {
-  partitaAttiva = true;
-  premioCorrente = "ambo";
-  aggiornaTV();
-}
-
-function resetPartita() {
-  partitaAttiva = false;
-  premioCorrente = "ambo";
-
-  for (let p in premi) {
-    premi[p].vinto = false;
-    premi[p].vincitore = null;
-  }
-
-  giocatori.forEach(g => g.premi = []);
-
-  renderChiamante();
-  aggiornaTV();
-}
-
-/* ---------------- PREMI ---------------- */
-
-function assegnaPremio(premio, nomeGiocatore) {
-  if (premi[premio].vinto) return;
-
-  premi[premio].vinto = true;
-  premi[premio].vincitore = nomeGiocatore;
-
-  const g = giocatori.find(g => g.nome === nomeGiocatore);
-  g.premi.push(premio);
-
-  premioCorrente = prossimoPremio();
-  renderChiamante();
-  aggiornaTV();
-}
-
-function prossimoPremio() {
-  for (let p in premi) {
-    if (!premi[p].vinto) return p;
-  }
-  return "FINE PARTITA";
-}
-
-/* ---------------- RENDER CHIAMANTE ---------------- */
-
-function renderChiamante() {
-  const premiDiv = document.getElementById("lista-premi");
-  premiDiv.innerHTML = "";
-
-  for (let p in premi) {
-    const div = document.createElement("div");
-    div.className = "premio" + (premi[p].vinto ? " vinto" : "");
-    div.textContent = p.toUpperCase();
-
-    if (!premi[p].vinto) {
-      div.onclick = () => {
-        const nome = prompt("Assegna a chi?");
-        if (nome) assegnaPremio(p, nome);
-      };
+function startGame() {
+  set(ref(db, "game"), {
+    started: true,
+    prizes: {
+      ambo: { won: false },
+      terno: { won: false },
+      quaterna: { won: false },
+      cinquina: { won: false },
+      tombola: { won: false }
+    },
+    players: {
+      1: { name: "Giocatore 1", wins: [] },
+      2: { name: "Giocatore 2", wins: [] },
+      3: { name: "Giocatore 3", wins: [] }
     }
-
-    premiDiv.appendChild(div);
-  }
-
-  const gDiv = document.getElementById("lista-giocatori");
-  gDiv.innerHTML = "";
-
-  giocatori.forEach(g => {
-    const d = document.createElement("div");
-    d.className = "giocatore";
-    d.innerHTML = `<strong>${g.nome}</strong><br>Premi: ${g.premi.join(", ") || "-"}`;
-    gDiv.appendChild(d);
   });
 }
 
-/* ---------------- TV ---------------- */
+function resetGame() {
+  set(ref(db, "game"), null);
+}
 
-function aggiornaTV() {
-  document.getElementById("tv-premio").textContent =
-    partitaAttiva ? premioCorrente.toUpperCase() : "IN ATTESA";
+/* ------------------ ASSIGN PRIZE ------------------ */
 
-  let testo = "";
-  for (let p in premi) {
-    if (premi[p].vinto) {
-      testo += `<div>${p.toUpperCase()} → ${premi[p].vincitore}</div>`;
-    }
+function selectPrize(prize) {
+  selectedPrize = prize;
+}
+
+function assignPrize(playerId) {
+  if (!selectedPrize) return;
+
+  update(ref(db, `game/prizes/${selectedPrize}`), {
+    won: true,
+    player: playerId
+  });
+
+  update(ref(db, `game/players/${playerId}/wins`), {
+    [Date.now()]: selectedPrize
+  });
+
+  selectedPrize = null;
+}
+
+/* ------------------ UI RENDER ------------------ */
+
+onValue(ref(db, "game"), (snap) => {
+  const game = snap.val();
+  renderCaller(game);
+  renderTV(game);
+});
+
+function renderCaller(game) {
+  if (role !== "caller") return;
+
+  const prizeDiv = document.getElementById("prizes");
+  const playersDiv = document.getElementById("players");
+  prizeDiv.innerHTML = "";
+  playersDiv.innerHTML = "";
+
+  if (!game) return;
+
+  prizeOrder.forEach(p => {
+    const btn = document.createElement("button");
+    btn.textContent = p.toUpperCase();
+    if (game.prizes[p].won) btn.disabled = true;
+    btn.onclick = () => selectPrize(p);
+    prizeDiv.appendChild(btn);
+  });
+
+  Object.entries(game.players).forEach(([id, p]) => {
+    const b = document.createElement("button");
+    b.textContent = p.name;
+    b.onclick = () => assignPrize(id);
+    playersDiv.appendChild(b);
+  });
+}
+
+function renderTV(game) {
+  if (role !== "tv") return;
+
+  const tvPlayers = document.getElementById("tvPlayers");
+  const tvPrizes = document.getElementById("tvPrizes");
+  tvPlayers.innerHTML = "";
+  tvPrizes.innerHTML = "";
+
+  if (!game) {
+    tvPlayers.textContent = "In attesa di partita...";
+    return;
   }
 
-  document.getElementById("tv-vincitore").innerHTML = testo;
+  Object.values(game.players).forEach(p => {
+    const d = document.createElement("div");
+    d.textContent = `${p.name} → ${Object.values(p.wins || {}).join(", ")}`;
+    tvPlayers.appendChild(d);
+  });
 
-  const tg = document.getElementById("tv-giocatori");
-  tg.innerHTML = "";
-  giocatori.forEach(g => {
-    tg.innerHTML += `<div>${g.nome}: ${g.premi.join(", ") || "-"}</div>`;
+  prizeOrder.forEach(p => {
+    const d = document.createElement("div");
+    d.textContent = game.prizes[p].won
+      ? `${p.toUpperCase()} vinta`
+      : `${p.toUpperCase()} disponibile`;
+    tvPrizes.appendChild(d);
   });
 }

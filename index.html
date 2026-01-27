@@ -1,92 +1,63 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Super Tombola</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: #fff;
-    }
-
-    .hidden { display: none; }
-
-    button {
-      padding: 10px 16px;
-      font-size: 16px;
-      margin: 5px;
-      cursor: pointer;
-    }
-
-    .premio {
-      padding: 10px;
-      border: 1px solid #555;
-      margin: 5px;
-      cursor: pointer;
-    }
-
-    .premio.vinto {
-      background: #444;
-      text-decoration: line-through;
-      color: #999;
-      cursor: not-allowed;
-    }
-
-    .giocatore {
-      border: 1px solid #555;
-      padding: 10px;
-      margin: 5px;
-    }
-
-    .tv {
-      text-align: center;
-      padding: 40px;
-    }
-
-    .tv h1 {
-      font-size: 60px;
-      margin-bottom: 20px;
-    }
-
-    .tv h2 {
-      font-size: 40px;
-      color: gold;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-<!-- SCELTA RUOLO -->
-<div id="schermata-ruolo">
-  <h1>Super Tombola</h1>
-  <button onclick="setRuolo('chiamante')">Chiamante</button>
-  <button onclick="setRuolo('tv')">TV</button>
+<h1>🎱 Super Tombola</h1>
+
+<div id="roleSelect">
+  <button onclick="setRole('caller')">🎤 Chiamante</button>
+  <button onclick="setRole('tv')">📺 TV</button>
 </div>
 
-<!-- CHIAMANTE -->
-<div id="schermata-chiamante" class="hidden">
-  <h2>Chiamante</h2>
-
-  <button onclick="avviaPartita()">Avvia partita</button>
-  <button onclick="resetPartita()">Reset</button>
+<div id="caller" class="hidden">
+  <button onclick="startGame()">▶️ Avvia partita</button>
+  <button onclick="resetGame()">🔄 Reset</button>
 
   <h3>Premi</h3>
-  <div id="lista-premi"></div>
+  <div id="prizes"></div>
 
   <h3>Giocatori</h3>
-  <div id="lista-giocatori"></div>
+  <div id="players"></div>
 </div>
 
-<!-- TV -->
-<div id="schermata-tv" class="hidden tv">
-  <h1 id="tv-premio">IN ATTESA</h1>
-  <h2 id="tv-vincitore"></h2>
-  <div id="tv-giocatori"></div>
+<div id="tv" class="hidden">
+  <h2>📺 Stato partita</h2>
+  <div id="tvPlayers"></div>
+  <div id="tvPrizes"></div>
 </div>
+
+<!-- FIREBASE -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js";
+  import {
+    getDatabase, ref, set, update, onValue
+  } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCtuepB5Zrdqo1fN37P9Aivww0Cqc5950M",
+    authDomain: "super-tombola.firebaseapp.com",
+    databaseURL: "https://super-tombola-default-rtdb.europe-west1.firebasedatabase.app",
+    projectId: "super-tombola",
+    storageBucket: "super-tombola.appspot.com",
+    messagingSenderId: "435954736235",
+    appId: "1:435954736235:web:888090e32d4a663ae9e52e"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getDatabase(app);
+
+  window.db = db;
+  window.ref = ref;
+  window.set = set;
+  window.update = update;
+  window.onValue = onValue;
+</script>
 
 <script src="app.js"></script>
 </body>
