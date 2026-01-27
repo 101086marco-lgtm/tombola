@@ -1,31 +1,43 @@
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getDatabase, ref, set, update, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+/*************************************************
+* 🔥 FIREBASE INIT (OBBLIGATORIO)
+*************************************************/
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, update, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "API_KEY",
-  authDomain: "PROJECT.firebaseapp.com",
-  databaseURL: "https://PROJECT-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "PROJECT",
-  storageBucket: "PROJECT.appspot.com",
-  messagingSenderId: "XXXX",
-  appId: "APPID"
+  apiKey: "AIzaSyCtuepB5Zrdqo1fN37P9Aivww0Cqc5950M",
+  authDomain: "super-tombola.firebaseapp.com",
+  databaseURL: "https://super-tombola-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "super-tombola",
+  storageBucket: "super-tombola.appspot.com",
+  messagingSenderId: "435954736235",
+  appId: "1:435954736235:web:888090e32d4a663ae9e52e"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
+/*************************************************
+* 🎮 STATO LOCALE
+*************************************************/
 let role = null;
 let selectedPrize = null;
 
 const prizeOrder = ["ambo", "terno", "quaterna", "cinquina", "tombola"];
 
-window.setRole = (r) => {
+/*************************************************
+* 🎭 SELEZIONE RUOLO
+*************************************************/
+window.setRole = function (r) {
   role = r;
   document.getElementById("roleSelect").classList.add("hidden");
   document.getElementById(r).classList.remove("hidden");
 };
 
-window.startGame = () => {
+/*************************************************
+* ▶️ AVVIO / RESET PARTITA
+*************************************************/
+window.startGame = function () {
   set(ref(db, "game"), {
     started: true,
     currentPrize: "ambo",
@@ -37,20 +49,25 @@ window.startGame = () => {
       tombola: { won: false }
     },
     players: {
-      1: { name: "Giocatore 1", wins: {}, cards: {} },
-      2: { name: "Giocatore 2", wins: {}, cards: {} },
-      3: { name: "Giocatore 3", wins: {}, cards: {} }
+      1: { name: "Giocatore 1", wins: [] },
+      2: { name: "Giocatore 2", wins: [] },
+      3: { name: "Giocatore 3", wins: [] }
     }
   });
 };
 
-window.resetGame = () => {
-  set(ref(db, "game"), null);
+window.resetGame = function () {
+  remove(ref(db, "game"));
 };
 
-window.selectPrize = (p) => selectedPrize = p;
+/*************************************************
+* 🏆 PREMI
+*************************************************/
+window.selectPrize = function (prize) {
+  selectedPrize = prize;
+};
 
-window.assignPrize = (playerId) => {
+window.assignPrize = function (playerId) {
   if (!selectedPrize) return;
 
   update(ref(db, `game/prizes/${selectedPrize}`), {
@@ -59,64 +76,81 @@ window.assignPrize = (playerId) => {
   });
 
   update(ref(db, `game/players/${playerId}/wins`), {
-    [selectedPrize]: true
+    [Date.now()]: selectedPrize
   });
 
-  const next = prizeOrder.find(p => !document.game?.prizes?.[p]?.won);
-  if (next) update(ref(db, "game"), { currentPrize: next });
+  const next = prizeOrder[prizeOrder.indexOf(selectedPrize) + 1];
+  if (next) {
+    update(ref(db, "game"), { currentPrize: next });
+  }
 
   selectedPrize = null;
 };
 
-onValue(ref(db, "game"), snap => {
+/*************************************************
+* 📡 SINCRONIZZAZIONE REALTIME
+*************************************************/
+onValue(ref(db, "game"), (snap) => {
   const game = snap.val();
-  if (role === "caller") renderCaller(game);
-  if (role === "tv") renderTV(game);
+  renderCaller(game);
+  renderTV(game);
 });
 
+/*************************************************
+* 🧑‍💼 SCHERMATA CHIAMANTE
+*************************************************/
 function renderCaller(game) {
-  const prizes = document.getElementById("prizes");
-  const players = document.getElementById("players");
-  prizes.innerHTML = "";
-  players.innerHTML = "";
+  if (role !== "caller") return;
+
+  const prizeDiv = document.getElementById("prizes");
+  const playersDiv = document.getElementById("players");
+
+  prizeDiv.innerHTML = "";
+  playersDiv.innerHTML = "";
 
   if (!game) return;
 
   prizeOrder.forEach(p => {
-    const b = document.createElement("button");
-    b.textContent = p.toUpperCase();
+    const btn = document.createElement("button");
+    btn.textContent = p.toUpperCase();
     if (game.prizes[p].won) {
-      b.disabled = true;
-      b.style.textDecoration = "line-through";
-      b.style.background = "#555";
+      btn.disabled = true;
+      btn.style.opacity = 0.4;
     }
-    b.onclick = () => selectPrize(p);
-    prizes.appendChild(b);
+    btn.onclick = () => selectPrize(p);
+    prizeDiv.appendChild(btn);
   });
 
-  Object.entries(game.players).forEach(([id, pl]) => {
+  Object.entries(game.players).forEach(([id, p]) => {
     const b = document.createElement("button");
-    b.textContent = pl.name;
+    b.textContent = p.name;
     b.onclick = () => assignPrize(id);
-    players.appendChild(b);
+    playersDiv.appendChild(b);
   });
 }
 
+/*************************************************
+* 📺 SCHERMATA TV
+*************************************************/
 function renderTV(game) {
-  const tvPrize = document.getElementById("tvPrize");
+  if (role !== "tv") return;
+
   const tvPlayers = document.getElementById("tvPlayers");
+  const tvPrize = document.getElementById("tvPrize");
+
   tvPlayers.innerHTML = "";
+  tvPrize.innerHTML = "";
 
   if (!game) {
-    tvPrize.textContent = "In attesa di partita…";
+    tvPrize.textContent = "In attesa di partita...";
     return;
   }
 
-  tvPrize.textContent = `Si gioca per: ${game.currentPrize.toUpperCase()}`;
+  tvPrize.textContent = `🏆 Premio in gioco: ${game.currentPrize.toUpperCase()}`;
 
   Object.values(game.players).forEach(p => {
     const d = document.createElement("div");
-    d.textContent = `${p.name} → ${Object.keys(p.wins || {}).join(", ")}`;
+    d.textContent = `${p.name} → ${Object.values(p.wins || {}).join(", ")}`;
     tvPlayers.appendChild(d);
   });
 }
