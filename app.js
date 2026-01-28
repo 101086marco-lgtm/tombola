@@ -1,56 +1,52 @@
 /*************************
-* FIREBASE CONFIG (V8)
-*************************/
+ * FIREBASE CONFIG (v8)
+ *************************/
 var firebaseConfig = {
   apiKey: "INSERISCI_LA_TUA_API_KEY",
   authDomain: "super-tombola.firebaseapp.com",
   databaseURL: "https://super-tombola-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "super-tombola",
   storageBucket: "super-tombola.appspot.com",
-  messagingSenderId: "XXXX",
-  appId: "XXXX"
+  messagingSenderId: "INSERISCI_SENDER_ID",
+  appId: "INSERISCI_APP_ID"
 };
 
 firebase.initializeApp(firebaseConfig);
 var db = firebase.database();
 
 /*************************
-* STATO LOCALE
-*************************/
+ * STATO
+ *************************/
 let currentScreen = "home";
 let selectedPrize = null;
 
 const prizeOrder = ["ambo", "terno", "quaterna", "cinquina", "tombola"];
 
 /*************************
-* CAMBIO SCHERMATA
-*************************/
-function setScreen(screen) {
+ * NAVIGAZIONE SCHERMI
+ *************************/
+function showScreen(screen) {
+  document.getElementById("home").classList.add("hidden");
+  document.getElementById("caller").classList.add("hidden");
+  document.getElementById("tv").classList.add("hidden");
+
+  document.getElementById(screen).classList.remove("hidden");
   currentScreen = screen;
-
-  document.getElementById("home").style.display = "none";
-  document.getElementById("caller").style.display = "none";
-  document.getElementById("tv").style.display = "none";
-
-  document.getElementById(screen).style.display = "block";
 }
 
-/*************************
-* CLICK PULSANTI HOME
-*************************/
 function openCaller() {
   console.log("chiamante cliccato");
-  setScreen("caller");
+  showScreen("caller");
 }
 
 function openTV() {
   console.log("tv cliccato");
-  setScreen("tv");
+  showScreen("tv");
 }
 
 /*************************
-* AVVIO / RESET PARTITA
-*************************/
+ * PARTITA
+ *************************/
 function startGame() {
   firebase.database().ref("game").set({
     started: true,
@@ -61,7 +57,11 @@ function startGame() {
       cinquina: { won: false },
       tombola: { won: false }
     },
-    players: {}
+    players: {
+      1: { name: "Giocatore 1", wins: {} },
+      2: { name: "Giocatore 2", wins: {} },
+      3: { name: "Giocatore 3", wins: {} }
+    }
   });
 }
 
@@ -70,8 +70,8 @@ function resetGame() {
 }
 
 /*************************
-* PREMI
-*************************/
+ * PREMI
+ *************************/
 function selectPrize(prize) {
   selectedPrize = prize;
 }
@@ -79,18 +79,27 @@ function selectPrize(prize) {
 function assignPrize(playerId) {
   if (!selectedPrize) return;
 
-  firebase.database().ref("game/prizes/" + selectedPrize).update({
-    won: true,
-    player: playerId
-  });
+  const prizeRef = firebase.database().ref("game/prizes/" + selectedPrize);
 
-  firebase.database().ref("game/players/" + playerId + "/wins").push(selectedPrize);
-  selectedPrize = null;
+  prizeRef.once("value").then(snap => {
+    if (snap.val().won) return;
+
+    prizeRef.update({
+      won: true,
+      player: playerId
+    });
+
+    firebase.database()
+      .ref("game/players/" + playerId + "/wins")
+      .push(selectedPrize);
+
+    selectedPrize = null;
+  });
 }
 
 /*************************
-* RENDER CHIAMANTE
-*************************/
+ * RENDER CHIAMANTE
+ *************************/
 function renderCaller(game) {
   if (!game) return;
 
@@ -101,11 +110,11 @@ function renderCaller(game) {
   playersDiv.innerHTML = "";
 
   prizeOrder.forEach(p => {
-    const b = document.createElement("button");
-    b.textContent = p.toUpperCase();
-    if (game.prizes[p].won) b.disabled = true;
-    b.onclick = () => selectPrize(p);
-    prizesDiv.appendChild(b);
+    const btn = document.createElement("button");
+    btn.textContent = p.toUpperCase();
+    if (game.prizes[p].won) btn.classList.add("prize-won");
+    btn.onclick = () => selectPrize(p);
+    prizesDiv.appendChild(btn);
   });
 
   Object.keys(game.players || {}).forEach(id => {
@@ -117,8 +126,8 @@ function renderCaller(game) {
 }
 
 /*************************
-* RENDER TV
-*************************/
+ * RENDER TV
+ *************************/
 function renderTV(game) {
   const tv = document.getElementById("tvContent");
   tv.innerHTML = "";
@@ -128,7 +137,7 @@ function renderTV(game) {
     return;
   }
 
-  Object.values(game.players || {}).forEach(p => {
+  Object.values(game.players).forEach(p => {
     const d = document.createElement("div");
     d.textContent = p.name + " → " + Object.values(p.wins || {}).join(", ");
     tv.appendChild(d);
@@ -136,8 +145,8 @@ function renderTV(game) {
 }
 
 /*************************
-* LISTENER FIREBASE
-*************************/
+ * SYNC FIREBASE
+ *************************/
 firebase.database().ref("game").on("value", snap => {
   const game = snap.val();
   if (currentScreen === "caller") renderCaller(game);
