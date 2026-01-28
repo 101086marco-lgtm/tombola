@@ -7,14 +7,35 @@
 </head>
 <body>
 
-    <h1>TOMBOLA</h1>
+<h1>TOMBOLA</h1>
 
-    <div class="menu">
-        <button id="btnChiamante">CHIAMANTE</button>
-        <button id="btnTV">TV</button>
-        <button id="btnGiocatore">GIOCATORE</button>
-    </div>
+<div class="menu">
+    <button id="btnChiamante">CHIAMANTE</button>
+    <button id="btnTV">TV</button>
+    <button id="btnGiocatore">GIOCATORE</button>
+</div>
 
-    <script src="app.js"></script>
+<!-- 🔥 FIREBASE SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<!-- 🔥 CONFIG FIREBASE -->
+<script>
+  const firebaseConfig = {
+  apiKey: "AIzaSyCtuepB5Zrdqo1fN37P9Aivww0Cqc5950M",
+  authDomain: "super-tombola.firebaseapp.com",
+  projectId: "super-tombola",
+  storageBucket: "super-tombola.firebasestorage.app",
+  messagingSenderId: "435954736235",
+  appId: "1:435954736235:web:888090e32d4a663ae9e52e"
+};
+
+
+  firebase.initializeApp(firebaseConfig);
+</script>
+
+<!-- 🔥 APP -->
+<script src="app.js"></script>
+
 </body>
 </html>
