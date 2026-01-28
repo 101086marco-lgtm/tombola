@@ -1,72 +1,20 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8">
-  <title>Tombola Online</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <!-- Firebase v8 -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #111;
-      color: #fff;
-      text-align: center;
-    }
-
-    h1 { font-size: 3em; }
-    h2 { font-size: 2em; }
-
-    button {
-      font-size: 1.5em;
-      padding: 15px 30px;
-      margin: 10px;
-      border-radius: 10px;
-      border: none;
-      cursor: pointer;
-    }
-
-    .hidden { display: none; }
-
-    .prize-won {
-      background: #555 !important;
-      text-decoration: line-through;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <title>Tombola</title>
+    <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
-  <!-- HOME -->
-  <div id="home">
     <h1>TOMBOLA</h1>
-    <button onclick="openCaller()">CHIAMANTE</button>
-    <button onclick="openTV()">TV</button>
-  </div>
 
-  <!-- CHIAMANTE -->
-  <div id="caller" class="hidden">
-    <h2>Chiamante</h2>
-    <button onclick="startGame()">Avvia partita</button>
-    <button onclick="resetGame()">Reset</button>
+    <div class="menu">
+        <button id="btnChiamante">CHIAMANTE</button>
+        <button id="btnTV">TV</button>
+        <button id="btnGiocatore">GIOCATORE</button>
+    </div>
 
-    <h3>Premi</h3>
-    <div id="prizes"></div>
-
-    <h3>Giocatori</h3>
-    <div id="players"></div>
-  </div>
-
-  <!-- TV -->
-  <div id="tv" class="hidden">
-    <h1>TOMBOLA</h1>
-    <div id="tvContent" style="font-size:1.8em"></div>
-  </div>
-
-  <script src="app.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
