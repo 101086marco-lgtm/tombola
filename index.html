@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <title>Tombola</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<h1>TOMBOLA</h1>
+
+<div class="menu">
+    <button id="btnChiamante">CHIAMANTE</button>
+    <button id="btnTV">TV</button>
+    <button id="btnGiocatore">GIOCATORE</button>
+</div>
+
+<div id="schermo"></div>
+
+<!-- FIREBASE -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+const firebaseConfig = {
+  apiKey: "AIzaSyCtuepB5Zrdqo1fN37P9Aivww0Cqc5950M",
+  authDomain: "super-tombola.firebaseapp.com",
+  databaseURL: "https://super-tombola-default-rtdb.firebaseio.com",
+  projectId: "super-tombola",
+  storageBucket: "super-tombola.appspot.com",
+  messagingSenderId: "435954736235",
+  appId: "1:435954736235:web:888090e32d4a663ae9e52e"
+};
+
+firebase.initializeApp(firebaseConfig);
+</script>
+
+<script src="app.js"></script>
+
+</body>
+</html>
